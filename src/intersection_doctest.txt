@@ -1,0 +1,34 @@
+>>> from intersection import *
+
+
+Test segments_distance
+
+>>> a = LineSegment(Point(1,0), Point(2,0))
+>>> b = LineSegment(Point(0,1), Point(0,2))
+>>> "%0.2f" % segments_distance(a, b)
+'1.41'
+>>> c = LineSegment(Point(0,0), Point(5,5))
+>>> d = LineSegment(Point(2,2), Point(4,4))
+>>> e = LineSegment(Point(2,2), Point(7,7))
+>>> "%0.2f" % segments_distance(c, d)
+'0.00'
+>>> "%0.2f" % segments_distance(c, e)
+'0.00'
+
+
+Test segments_intersect
+
+>>> segments_intersect(LineSegment(Point(0,0), Point(1,0)), LineSegment(Point(0,0), Point(1,0)))
+True
+>>> segments_intersect(LineSegment(Point(0,0), Point(1,0)), LineSegment(Point(1,0), Point(1,1)))
+True
+
+
+Test point_segment_distance
+
+>>> a = LineSegment(Point(1,0), Point(2,0))
+>>> b = LineSegment(Point(2,0), Point(0,2))
+>>> point_segment_distance(Point(0,0), a)
+1.0
+>>> "%0.2f" % point_segment_distance(Point(0,0), b)
+'1.41'
