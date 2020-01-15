@@ -122,4 +122,3 @@ def point_segment_distance(point, segment):
 if __name__ == '__main__':
     import doctest
     doctest.testfile("intersection_doctest.txt")
-    # doctest.testmod()
