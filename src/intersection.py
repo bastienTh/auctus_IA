@@ -80,7 +80,6 @@ def segments_intersect(segment1, segment2):
 
 def point_segment_distance(point, segment):
     """
-
     """
     assert isinstance(point, Point), \
         "point is not of type Point, but of %r" % type(point)
