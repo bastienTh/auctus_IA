@@ -9,8 +9,6 @@ from robot_control import *
 dt = 0.05
 t = np.arange(0.0, 100, dt)
 
-
-# integrate your ODE using scipy.integrate.
 fig = plt.figure()
 ax = fig.add_subplot(111, autoscale_on=False, xlim=(-3, 7), ylim=(-3, 3))
 ax.grid()
@@ -19,7 +17,7 @@ time_template = 'time = %.1fs'
 time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 
 arms = [Robot(Arm()), Robot(Arm(base_pos=[4, 0]))]
-lines = [(ax.plot([], [], 'o-', lw=2))[0] for i in range(len(arms))]
+lines = [(ax.plot([], [], '-', lw=10, solid_capstyle='round'))[0] for i in range(len(arms))]
 print(lines[0])
 x, y = [], []
 
@@ -34,14 +32,14 @@ for arm in arms:
     x0 = [x0] * len(mvts)
     y0 = [y0] * len(mvts)
 
-    x1 = sin(mvts[:, 0]) + x0
-    y1 = -cos(mvts[:, 0]) + y0
+    x1 = cos(mvts[:, 0]) + x0
+    y1 = sin(mvts[:, 0]) + y0
 
-    x2 = sin(mvts[:, 1]) + x1
-    y2 = -cos(mvts[:, 1]) + y1
+    x2 = cos(mvts[:, 1]) + x1
+    y2 = sin(mvts[:, 1]) + y1
 
-    x3 = sin(mvts[:, 2]) + x2
-    y3 = -cos(mvts[:, 2]) + y2
+    x3 = cos(mvts[:, 2]) + x2
+    y3 = sin(mvts[:, 2]) + y2
 
     x.append([x0, x1, x2, x3])
     y.append([y0, y1, y2, y3])
@@ -68,3 +66,6 @@ ani = animation.FuncAnimation(fig, animate, np.arange(1, len(mvts)),
 
 # ani.save('double_pendulum.mp4', fps=15)
 plt.show()
+
+#TODO : change the arm's part frames so that they are not always
+#       colinear with the world frame

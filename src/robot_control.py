@@ -3,7 +3,7 @@ from math import pi
 import random
 
 class Arm:
-    def __init__(self, base_pos = [0, 0], arms_length = [1, 1, 1], joints_config = [pi, pi, pi]):
+    def __init__(self, base_pos = [0, 0], arms_length = [1, 1, 1], joints_config = [pi/2, 0, 0]):
         self.base_pos = base_pos
         self.arms_length = np.array(arms_length)
         self.current_config = np.array(joints_config)
@@ -24,7 +24,7 @@ class Arm:
         return mvt
 
     def mgi(self, x, y, theta):
-        return np.array([random.uniform(-pi, pi), random.uniform(-pi, pi), random.uniform(-pi, pi)])
+        return np.array([random.uniform(0, pi), random.uniform(-pi, pi), random.uniform(-pi, pi)])
 
 class Robot:
     """
