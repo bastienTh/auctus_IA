@@ -28,13 +28,11 @@ class Arm:
         # l1 = self.arms_length[0]
         # l2 = self.arms_length[1]
         # l3 = self.arms_length[2]
-
         # u1 = x-l3*cos(theta)
         # u2 = y-l3*sin(theta)
         # X = u2
         # Y = u1
         # Z = (l1**2-l2**2+u1**2+u2**2)/(2*l1)
-
         # # Solution 1 ------------------------------------------------
         # # th1
         # c1_1 = ((Y*Z) - X*sqrt(X**2 +Y**2-Z**2)) / (X**2 + Y**2)
@@ -83,4 +81,3 @@ class Robot:
 if __name__ == '__main__':
     import doctest
     doctest.testfile("robot_control_doctest.txt")
-    
