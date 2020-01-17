@@ -1,8 +1,7 @@
-from numpy import sin, cos
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from robot_control import *
+from robot_control import Arm, Robot
 
 
 # create a time array from 0..100 sampled at 0.05 second steps
@@ -32,14 +31,15 @@ for arm in arms:
     x0 = [x0] * len(mvts)
     y0 = [y0] * len(mvts)
 
-    x1 = cos(mvts[:, 0]) + x0
-    y1 = sin(mvts[:, 0]) + y0
+    x1 = np.cos(mvts[:, 0])
+    x1 = x1 + x0
+    y1 = np.sin(mvts[:, 0]) + y0
 
-    x2 = cos(mvts[:, 1]) + x1
-    y2 = sin(mvts[:, 1]) + y1
+    x2 = np.cos(mvts[:, 1]) + x1
+    y2 = np.sin(mvts[:, 1]) + y1
 
-    x3 = cos(mvts[:, 2]) + x2
-    y3 = sin(mvts[:, 2]) + y2
+    x3 = np.cos(mvts[:, 2]) + x2
+    y3 = np.sin(mvts[:, 2]) + y2
 
     x.append([x0, x1, x2, x3])
     y.append([y0, y1, y2, y3])
