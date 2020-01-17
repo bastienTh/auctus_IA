@@ -1,14 +1,12 @@
 """Calculate the distance between line segments."""
 
-import math
-
+from math import pi, hypot
 
 class Point(object):
     """A two dimensional point."""
     def __init__(self, x, y):
         self.x = float(x)
         self.y = float(y)
-
 
 class LineSegment(object):
     """A line segment in a two dimensional space."""
@@ -43,6 +41,16 @@ class LineSegment(object):
             return False
         return self.a*p.x + self.b == p.y
 
+def angle_sum(a,b):
+    if a < 0:
+        a = a + 2*pi
+    if b < 0:
+        b = b + 2*pi 
+    a = (a + b) % 2*pi
+    if a <= pi:
+        return a
+    else: 
+        return a - 2*pi 
 
 def segments_distance(segment1, segment2):
     """Calculate the distance between two line segments in the plane.
@@ -76,7 +84,6 @@ def segments_intersect(segment1, segment2):
     t = (dx2 * (segment1.p1.y - segment2.p1.y) +
          dy2 * (segment2.p1.x - segment1.p1.x)) / (-delta)
     return (0 <= s <= 1) and (0 <= t <= 1)
-
 
 def point_segment_distance(point, segment):
     """

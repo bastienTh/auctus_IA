@@ -1,0 +1,12 @@
+This is a doctest based regression suite for intersection.py
+Each '>>' line is run as if in a python shell, and counts as a test.
+The next line, if not '>>' is the expected output of the previous line.
+If anything doesn't match exactly (including trailing spaces), the test fails.
+It can be run from CLI with 'python3 -m doctest intersection_doctest.txt'
+
+>>> from robot_control import *
+
+Test mgi
+
+>>> arm = Arm()
+>>> arm.mgi(2,1,1)
