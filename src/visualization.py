@@ -1,12 +1,49 @@
+import sys
+import csv
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from robot_control import Arm, Robot
+
+arm_1_x0 = 0
+arm_1_y0 = 1
+arm_1_x1 = 2
+arm_1_y1 = 3
+arm_1_x2 = 4
+arm_1_y2 = 5
+arm_1_x3 = 6
+arm_1_y3 = 7
+arm_2_x0 = 8
+arm_2_y0 = 9
+arm_2_x1 = 10
+arm_2_y1 = 11
+arm_2_x2 = 12
+arm_2_y2 = 13
+arm_2_x3 = 14
+arm_2_y3 = 15
+
+if len(sys.argv) != 2 :
+    print("Usage: %s <csv_file>" % sys.argv[0])
+    exit()
+
+x, y = [], []
+
+with open(sys.argv[1], newline='') as csvfile:
+    spamreader = csv.reader(csvfile)
+    spamreader.__next__()
+    for row in spamreader:
+        x.append([
+            [float(row[arm_1_x0]), float(row[arm_1_x1]), float(row[arm_1_x2]), float(row[arm_1_x3])],
+            [float(row[arm_2_x0]), float(row[arm_2_x1]), float(row[arm_2_x2]), float(row[arm_2_x3])]
+        ])
+        y.append([
+            [float(row[arm_1_y0]), float(row[arm_1_y1]), float(row[arm_1_y2]), float(row[arm_1_y3])],
+            [float(row[arm_2_y0]), float(row[arm_2_y1]), float(row[arm_2_y2]), float(row[arm_2_y3])]
+        ])
 
 
 # create a time array from 0..100 sampled at 0.05 second steps
-dt = 0.05
-t = np.arange(0.0, 100, dt)
+dt = 0.01
+t = np.arange(0.0, dt*len(x), dt)
 
 fig = plt.figure()
 ax = fig.add_subplot(111, autoscale_on=False, xlim=(-3, 7), ylim=(-3, 3))
@@ -15,34 +52,8 @@ ax.grid()
 time_template = 'time = %.1fs'
 time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 
-arms = [Robot(Arm()), Robot(Arm(base_pos=[4, 0]))]
-lines = [(ax.plot([], [], '-', lw=10, solid_capstyle='round'))[0] for i in range(len(arms))]
-print(lines[0])
-x, y = [], []
+lines = [(ax.plot([], [], '-', lw=10, solid_capstyle='round'))[0] for i in range(len(x[0]))]
 
-for arm in arms:
-    mvts = []
-    while len(mvts) < len(t):
-        mvts += arm.goto_random_pos()
-
-    mvts = np.array(mvts[:len(t)])
-
-    x0, y0 = arm.get_base_pos()
-    x0 = [x0] * len(mvts)
-    y0 = [y0] * len(mvts)
-
-    x1 = np.cos(mvts[:, 0])
-    x1 = x1 + x0
-    y1 = np.sin(mvts[:, 0]) + y0
-
-    x2 = np.cos(mvts[:, 1]) + x1
-    y2 = np.sin(mvts[:, 1]) + y1
-
-    x3 = np.cos(mvts[:, 2]) + x2
-    y3 = np.sin(mvts[:, 2]) + y2
-
-    x.append([x0, x1, x2, x3])
-    y.append([y0, y1, y2, y3])
 
 def init():
     for i in range(len(lines)):
@@ -51,19 +62,17 @@ def init():
     time_text.set_text('')
     return [time_text] + lines.copy()
 
-
 def animate(i):
     for j in range(len(lines)):
-        thisx = [x[j][0][i], x[j][1][i], x[j][2][i], x[j][3][i]]
-        thisy = [y[j][0][i], y[j][1][i], y[j][2][i], y[j][3][i]]
-        lines[j].set_data(thisx, thisy)
+        lines[j].set_data(x[i][j], y[i][j])
 
     time_text.set_text(time_template % (i*dt))
     return [time_text] + lines.copy()
 
-ani = animation.FuncAnimation(fig, animate, np.arange(1, len(mvts)),
+ani = animation.FuncAnimation(fig, animate, np.arange(1, len(x)),
                               interval=1000*dt, blit=True, init_func=init)
 
+print(t[-1])
 # ani.save('double_pendulum.mp4', fps=15)
 plt.show()
 
