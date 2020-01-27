@@ -8,4 +8,4 @@ It can be run from CLI with 'python3 -m doctest intersection_doctest.txt'
 
 >>> arm = Arm(seed = 0)
 >>> arm.get_random_config()
-array([ 2.65282949,  1.62077531, -0.49906348])
+[ 2.65282949,  1.62077531, -0.49906348]
