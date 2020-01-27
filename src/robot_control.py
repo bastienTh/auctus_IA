@@ -4,9 +4,10 @@ import numpy as np
 import random
 
 class Arm:
-    def __init__(self, base_pos = [0, 0], arms_length = [1, 1, 1], joints_config = [pi/2, 0, 0], seed = None):
+    def __init__(self, base_pos = [0, 0], arms_length = [1, 1, 1], joints_config = [pi/2, 0, 0], radius = 0.05, seed = None):
         self.base_pos = base_pos
         self.arms_length = np.array(arms_length)
+        self.radius = radius
         self.current_config = np.array(joints_config)
         self.movable = [True, True, True]
         self.ranges = [(0, pi), (-pi, pi), (-pi, pi)]
@@ -15,6 +16,9 @@ class Arm:
     def with_constraints(self, movable = [True, True, True], joints_ranges = [(0, pi), (-pi, pi), (-pi, pi)]):
         self.movable = movable
         self.ranges = joints_ranges
+
+    def get_radius(self):
+        return self.radius
 
     def config_to_pos(self, config):
         x0, y0 = self.base_pos
