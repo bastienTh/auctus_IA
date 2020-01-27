@@ -37,7 +37,7 @@ class Arm:
         if final_config is None:
             return None
         config_delta = final_config - self.current_config
-        mvt = np.array([config_to_pos(self.current_config + i*config_delta/t) for i in range(t+1)])
+        mvt = [config_to_pos(self.current_config + i*config_delta/t) for i in range(t+1)]
         self.current_config = final_config
         return mvt
 
