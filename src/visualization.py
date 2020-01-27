@@ -42,7 +42,7 @@ with open(sys.argv[1], newline='') as csvfile:
 
 
 # create a time array from 0..100 sampled at 0.05 second steps
-dt = 0.01
+dt = 0.001
 t = np.arange(0.0, dt*len(x), dt)
 
 fig = plt.figure()
@@ -70,7 +70,7 @@ def animate(i):
     return [time_text] + lines.copy()
 
 ani = animation.FuncAnimation(fig, animate, np.arange(1, len(x)),
-                              interval=1000*dt, blit=True, init_func=init)
+                              interval=1000*dt, blit=True, init_func=init, repeat=False)
 
 print(t[-1])
 # ani.save('double_pendulum.mp4', fps=15)
