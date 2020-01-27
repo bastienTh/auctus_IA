@@ -1,0 +1,12 @@
+data: mouvement de l'un fixé, mvt de l'autre aléatoire avec et sans collisions
+(et inversement) pour éviter les biais d'apprentissage.
+
+données: potentiellement donner q et q'
+
+Données: fixer q1 et q2 horizontalement, bouger q3 pour intersection ou non
+(générer plein de données), avec mouvement précédents
+
+Format données :
+CSV
+1 ligne = 1 pas de temps
+1 ligne = x1, y1, x2, y2...
