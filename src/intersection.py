@@ -93,7 +93,7 @@ def point_segment_distance(point, segment):
     dx = segment.p2.x - segment.p1.x
     dy = segment.p2.y - segment.p1.y
     if dx == dy == 0:  # the segment's just a point
-        return math.hypot(point.x - segment.p1.x, point.y - segment.p1.y)
+        return hypot(point.x - segment.p1.x, point.y - segment.p1.y)
 
     if dx == 0:
         if (point.y <= segment.p1.y or point.y <= segment.p2.y) and \
@@ -123,7 +123,7 @@ def point_segment_distance(point, segment):
         dx = point.x - near_x
         dy = point.y - near_y
 
-    return math.hypot(dx, dy)
+    return hypot(dx, dy)
 
 if __name__ == '__main__':
     import doctest

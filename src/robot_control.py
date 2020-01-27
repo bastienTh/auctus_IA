@@ -35,13 +35,11 @@ class Arm:
         return [[x0, y0], [x1, y1], [x2, y2], [x3, y3]]
 
     def goto_random_pos(self, t):
-        x = x - self.base_pos[0]
-        y = y - self.base_pos[1]
         final_config = self.get_random_config()
         if final_config is None:
             return None
         config_delta = final_config - self.current_config
-        mvt = [config_to_pos(self.current_config + i*config_delta/t) for i in range(t+1)]
+        mvt = [self.config_to_pos(self.current_config + i*config_delta/t) for i in range(t+1)]
         self.current_config = final_config
         return mvt
 
