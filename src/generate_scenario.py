@@ -6,6 +6,7 @@ from datetime import datetime
 from robot_control import Arm
 from intersection import segments_distance, LineSegment, Point
 from infinity import inf
+import sys, getopt # for cli args parsing
 
 # We labelize each frame according to these thresholds. If the collision happens
 # under thresholds[i] frames, the frame will be labelized 'i'.
@@ -17,23 +18,21 @@ assert label_thresholds[-1] == inf
 # should be greater than label_thresholds[-2].
 no_collision_cropping = 120
 
+arm_radius = 0.05
 
-def mvt_collision(mvt, arm1, arm2):
+def mvt_collision(mvt, arm1_radius, arm2_radius):
     for i in range(3):
         for j in range(4,7):
-            # print(segments_distance(LineSegment(Point(mvt[i][0],mvt[i][1]), Point(mvt[i+1][0],mvt[i+1][1])),
-            #                         LineSegment(Point(mvt[j][0],mvt[j][1]), Point(mvt[j+1][0],mvt[j+1][1]))))
-            # print(arm1.get_radius() + arm2.get_radius())
             if segments_distance(   LineSegment(Point(mvt[i][0],mvt[i][1]), Point(mvt[i+1][0],mvt[i+1][1])),
-                                    LineSegment(Point(mvt[j][0],mvt[j][1]), Point(mvt[j+1][0],mvt[j+1][1]))) < (arm1.get_radius() + arm2.get_radius()):
+                                    LineSegment(Point(mvt[j][0],mvt[j][1]), Point(mvt[j+1][0],mvt[j+1][1]))) < (arm1_radius + arm2_radius):
                 return True
     return False
 
 # ------------------------------------------------------
 # Generate a mouvement and structure the data for the CSV
 def generate_mvt():
-    arm1 = Arm(base_pos=[0,0])
-    arm2 = Arm(base_pos=[4,0])
+    arm1 = Arm(base_pos=[0,0], radius=arm_radius)
+    arm2 = Arm(base_pos=[4,0], radius=arm_radius)
     mvts = []
     collision = False
     i = 0
@@ -42,7 +41,7 @@ def generate_mvt():
         mvt2 = arm2.goto_random_pos(100)
         mvt  = [mvt1[i] + mvt2[i] for i in range(len(mvt1))]
         for j in range(len(mvt)):
-            if mvt_collision(mvt[j], arm1, arm2):
+            if mvt_collision(mvt[j], arm1.get_radius(), arm2.get_radius()):
                 mvt = mvt[:j+1]
                 collision = True
                 break
@@ -50,16 +49,34 @@ def generate_mvt():
         mvts = mvts + mvt
     return mvts, collision
 
+def read_mvt(file):
+    mvt = []
+    collision = False
+    with open(file, newline='') as csvfile:
+        spamreader = csv.reader(csvfile)
+        spamreader.__next__()
+        for row in spamreader:
+            pos = [[float(row[2*i+j]) for j in (0, 1)] for i in range(len(row)//2)]
+
+            mvt.append(pos)
+            if mvt_collision(pos, arm_radius, arm_radius):
+                collision = True
+                break
+    return mvt, collision
+
 # ------------------------------------------------------
 # Name of the CSV file (diferent for every new generation)
-def filenames(collision):
-    if collision:
-        folder='../data/collision/'
+def filenames(file, collision):
+    if file is None:
+        if collision:
+            folder='../data/collision/'
+        else:
+            folder='../data/no_collision/'
+        now = datetime.now()
+        name=folder+str(now.year)+'_'+str(now.month)+'_'+str(now.day)+'__'+str(now.hour)+':'+str(now.minute)+':'+str(now.second)+'::'+str(now.microsecond)
     else:
-        folder='../data/no_collision/'
-    now = datetime.now()
-    name=str(now.year)+'_'+str(now.month)+'_'+str(now.day)+'__'+str(now.hour)+':'+str(now.minute)+':'+str(now.second)+'::'+str(now.microsecond)
-    return folder + name + '_data.csv', folder + name + '_labels.txt'
+        name = file[:-len('_data.csv')]
+    return name + '_data.csv', name + '_labels.txt'
 
 
 # ------------------------------------------------------
@@ -118,11 +135,29 @@ def write_data(mvt, file):
                 'arm_2_x3': pos[7][0], 'arm_2_y3': pos[7][1]
             })
 
-def main():
-    mvt, collision = generate_mvt()
-    data_file, labels_file = filenames(collision)
-    labelize(mvt, collision, labels_file)
-    write_data(mvt, data_file)
+def main(n, file = None):
+    if file is None:
+        mvt, collision = generate_mvt()
+    else:
+        mvt, collision = read_mvt(file)
+
+    data_file, labels_file = filenames(file, collision)
+    print(data_file)
+    print(labels_file)
+    if not(n):
+        labelize(mvt, collision, labels_file)
+    if file is None:
+        write_data(mvt, data_file)
 
 if __name__ == '__main__':
-    main()
+    opts, args = getopt.getopt(sys.argv[1:],"ni:",["ifile=", "nolabel"])
+    file = None
+    n = False
+    for opt, arg in opts:
+        if opt in ("-i", "--ifile"):
+            file = arg
+        elif opt in ("-n", "--nolabel"):
+            n = True
+    if file is not None and n:
+        exit()
+    main(n, file)
