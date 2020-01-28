@@ -9,6 +9,9 @@ from intersection import segments_distance, LineSegment, Point
 def mvt_collision(mvt):
     for i in range(3):
         for j in range(4,7):
+            print(segments_distance(    LineSegment(Point(mvt[i][0],mvt[i][1]), Point(mvt[i+1][0],mvt[i+1][1])), 
+                                        LineSegment(Point(mvt[j][0],mvt[j][1]), Point(mvt[j+1][0],mvt[j+1][1]))))
+            print(arm1.get_radius() + arm2.get_radius())
             if segments_distance(   LineSegment(Point(mvt[i][0],mvt[i][1]), Point(mvt[i+1][0],mvt[i+1][1])), 
                                     LineSegment(Point(mvt[j][0],mvt[j][1]), Point(mvt[j+1][0],mvt[j+1][1]))) < (arm1.get_radius() + arm2.get_radius()):
                 return True
@@ -16,19 +19,22 @@ def mvt_collision(mvt):
 
 # ------------------------------------------------------
 # Generate a mouvement and structure the data for the CSV
-arm1 = Arm()
-arm2 = Arm()
+arm1 = Arm(base_pos=[0,0])
+arm2 = Arm(base_pos=[4,0])
 mvts = []
 collision = False
-for i in range(100):
+i = 0
+while ((i < 80) and (collision == False)):
     mvt1 = arm1.goto_random_pos(100)
     mvt2 = arm2.goto_random_pos(100)
     mvt  = [mvt1[i] + mvt2[i] for i in range(len(mvt1))]
-    mvts = mvts + mvt
-    for j in range(100):
+    for j in range(len(mvt)):
         if mvt_collision(mvt[j]):
+            mvt = mvt[:j+1]
             collision = True
             break
+    i+=1
+    mvts = mvts + mvt
 
 # ------------------------------------------------------
 # Name of the CSV file (diferent for every new generation)

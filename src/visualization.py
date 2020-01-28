@@ -42,7 +42,7 @@ with open(sys.argv[1], newline='') as csvfile:
 
 
 # create a time array from 0..100 sampled at 0.05 second steps
-dt = 0.01
+dt = 0.005
 t = np.arange(0.0, dt*len(x), dt)
 
 fig = plt.figure()
