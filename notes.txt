@@ -10,3 +10,12 @@ Format données :
 CSV
 1 ligne = 1 pas de temps
 1 ligne = x1, y1, x2, y2...
+
+
+
+
+
+vitesse cst
+Réfléchir mathématiquement à la taille de la fenre glissante + labels
+
+Un seul mvt pour commencer, puis des mvts composés

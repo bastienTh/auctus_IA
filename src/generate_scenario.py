@@ -7,18 +7,136 @@ from robot_control import Arm
 from intersection import segments_distance, LineSegment, Point
 from infinity import inf
 import sys, getopt # for cli args parsing
+from math import pi, ceil
+import random
 
 # We labelize each frame according to these thresholds. If the collision happens
 # under thresholds[i] frames, the frame will be labelized 'i'.
-label_thresholds = [30, 60, 90, inf]
-assert label_thresholds[-1] == inf
+# label_thresholds = [30, 60, 90, inf]
+label_thresholds = [30, 60, 90, 120]
 
 # We crop that many last frames from all videos with no collisions to avoid
 # mislabelling in case of collision right after the end of the video. This
 # should be greater than label_thresholds[-2].
-no_collision_cropping = 120
+no_collision_cropping = label_thresholds[-2]
 
 arm_radius = 0.05
+
+# How to generate positions procedurally
+# 1) Choose starting config
+#   a) 15 angles per joint, 7 for the base
+#   b) Possibly randomized a bit
+# 2) Choose fized joints
+#   Choose randomly to freeze the first 0-3 joints, with emphasis on 0
+#   proportions: ~[0.5, 0.3, O.15, 0.05]
+# 3) Choose bases
+#   a) First one in the plane (or in 0,0, parameterable)
+#   b) Second one at a short, randomized distance (arm_size, 3*arm_size)
+# 4) Move! (many times)
+
+def get_partition(max_pos):
+    assert max_pos != 0
+
+    max_joint_blocks = 5
+    less_joint_blocks = 2
+    joint1_positions = 4
+    joint2_positions = 5
+    max_joint_pos = joint1_positions * joint2_positions * joint2_positions
+    # batch_size = 100 # a batch is composed of scenarios with the same configuration
+    batch_size = 10 # a batch is composed of scenarios with the same configuration
+
+    nb_in_joint_blocks, nb_in_joint_pos = 0, 0
+
+    if max_pos//max_joint_blocks >= batch_size:
+        nb_blocks = max_joint_blocks
+        nb_in_joint_blocks = max_pos//max_joint_blocks
+    elif max_pos//less_joint_blocks >= batch_size:
+        nb_blocks = less_joint_blocks
+        nb_in_joint_blocks = max_pos//less_joint_blocks
+    else:
+        nb_blocks = 1
+        nb_in_joint_blocks = max_pos
+
+    if nb_in_joint_blocks//max_joint_pos >= batch_size:
+        nb_pos = max_joint_pos
+        nb_in_joint_pos = nb_in_joint_blocks//max_joint_pos
+    else:
+        nb_pos = ceil(nb_in_joint_blocks/batch_size)
+        nb_in_joint_pos = nb_in_joint_blocks//nb_pos # we slice in y sections of ~100
+
+    return nb_blocks, nb_in_joint_blocks, nb_pos, nb_in_joint_pos
+
+def get_start_parameters(current_pos, max_pos):
+    assert max_pos >= current_pos
+    parameters = {
+        'base1':[0,0], 'base2':[4,0],
+        'config1':[pi/2, 0, 0], 'config2':[pi/2, 0, 0],
+        'movable1':[True, True, True], 'movable2':[True, True, True]
+    }
+
+    nb_blocks, nb_in_joint_blocks, nb_pos, nb_in_joint_pos = get_partition(max_pos)
+
+    joint_blocks = [
+        {'movable1':[True, True, True], 'movable2':[True, True, True]},
+        {'movable1':[False, False, True], 'movable2':[True, True, True]},
+        {'movable1':[False, False, True], 'movable2':[False, False, True]},
+        {'movable1':[False, False, False], 'movable2':[True, True, True]},
+        {'movable1':[False, False, False], 'movable2':[False, False, True]},
+    ]
+
+    joint_pos1 = [[a, b, c] for a in (0 , pi/4, pi/2, 3*pi/4) for b in (0, -pi/3, -2*pi/3, pi/3, 2*pi/3) for c in (0, -pi/3, -2*pi/3, pi/3, 2*pi/3)]
+    joint_pos2 = [[a, b, c] for a in (pi, 3*pi/4, pi/2, pi/4) for b in (0, pi/3, 2*pi/3, -pi/3, -2*pi/3) for c in (0, pi/3, 2*pi/3, -pi/3, -2*pi/3)]
+
+    current_joint_block = current_pos//nb_in_joint_blocks
+    current_in_block = current_pos % nb_in_joint_blocks
+
+    current_joint_pos = current_in_block//nb_in_joint_pos
+    current_in_pos = current_in_block % nb_in_joint_pos
+
+    movableA, movableB = 'movable1', 'movable2'
+    if current_in_pos % 2 :
+        movableA, movableB = movableB, movableA
+
+    parameters['movable1'] = joint_blocks[current_joint_block][movableA]
+    parameters['movable2'] = joint_blocks[current_joint_block][movableB]
+
+    parameters['config1'] = joint_pos1[current_joint_pos]
+    parameters['config2'] = joint_pos2[current_joint_pos]
+
+    return parameters
+
+movement_types = {
+    'random':{
+        'base1':[0,0], 'base2':[4,0],
+        'config1':[pi/2, 0, 0], 'config2':[pi/2, 0, 0],
+        'movable1':[True, True, True], 'movable2':[True, True, True]
+    },
+    'LFixedHorizontal_lastRFree': {
+        'base1':[0,0], 'base2':[5.5,0],
+        'config1':[0, 0, 0], 'config2':[pi, 0, random.uniform(-pi, pi)],
+        'movable1':[False, False, False], 'movable2':[False, False, True]
+    },
+    'RFixedHorizontal_lastLFree': {
+        'base1':[0,0], 'base2':[5.5,0],
+        'config1':[0, 0, random.uniform(-pi, pi)], 'config2':[pi, 0, 0],
+        'movable1':[False, False, True], 'movable2':[False, False, False]
+    },
+    'LFixed_lastRFree': {
+        'base1':[0,0], 'base2':[5,0],
+        'config1':[pi/4, -pi/4, 0], 'config2':[3*pi/4, pi/4, random.uniform(-pi, pi)],
+        'movable1':[False, False, False], 'movable2':[False, False, True]
+    },
+    'RFixed_lastLFree': {
+        'base1':[0,0], 'base2':[5,0],
+        'config1':[pi/4, -pi/4, random.uniform(-pi, pi)], 'config2':[3*pi/4, pi/4, 0],
+        'movable1':[False, False, True], 'movable2':[False, False, False]
+    },
+}
+
+def randomize_config():
+    movement_types['LFixedHorizontal_lastRFree']['config2'] = [-pi, 0, random.uniform(-pi, pi)]
+    movement_types['RFixedHorizontal_lastLFree']['config1'] = [0, 0, random.uniform(-pi, pi)]
+
 
 def mvt_collision(mvt, arm1_radius, arm2_radius):
     for i in range(3):
@@ -29,14 +147,21 @@ def mvt_collision(mvt, arm1_radius, arm2_radius):
     return False
 
 # ------------------------------------------------------
-# Generate a mouvement and structure the data for the CSV
-def generate_mvt():
-    arm1 = Arm(base_pos=[0,0], radius=arm_radius)
-    arm2 = Arm(base_pos=[4,0], radius=arm_radius)
+# Generate a movement and structure the data for the CSV
+def generate_mvt(type='random', start_config=None):
+    if start_config is None:
+        start_config = movement_types[type]
+
+    arm1 = Arm(base_pos=start_config['base1'], joints_config=start_config['config1'], radius=arm_radius)
+    arm1.with_constraints(movable=start_config['movable1'])
+    arm2 = Arm(base_pos=start_config['base2'], joints_config=start_config['config2'], radius=arm_radius)
+    arm2.with_constraints(movable=start_config['movable2'])
+
     mvts = []
     collision = False
     i = 0
     while ((i < 80) and (collision == False)):
+        assert change speed
         mvt1 = arm1.goto_random_pos(100)
         mvt2 = arm2.goto_random_pos(100)
         mvt  = [mvt1[i] + mvt2[i] for i in range(len(mvt1))]
@@ -47,6 +172,15 @@ def generate_mvt():
                 break
         i+=1
         mvts = mvts + mvt
+
+    if not collision:
+        mvts = mvts[:-no_collision_cropping]
+
+    # keep only the last moves (near the collision)
+    if label_thresholds[-1] not in (-inf, inf) and len(mvts) > label_thresholds[-1]:
+        mvts = mvts[-label_thresholds[-1]:]
+
+    assert len(mvts) <= label_thresholds[-1]
     return mvts, collision
 
 def read_mvt(file):
@@ -87,15 +221,14 @@ def labelize(mvt, collision, file):
         frame_labels=''
         if collision:
             label = len(mvt)-1
-            for i in range(len(mvt)):
-                for j in range(len(label_thresholds)):
-                    if label < label_thresholds[j]:
-                        nb_labels[j] += 1
-                        frame_labels += str(j)+' '
+            for pos in range(len(mvt)):
+                for label_index in range(len(label_thresholds)):
+                    if label < label_thresholds[label_index]:
+                        nb_labels[label_index] += 1
+                        frame_labels += str(label_index)+' '
                         break
                 label -= 1
         else:
-            mvt = mvt[:-no_collision_cropping]
             nb_labels[-1] = len(mvt)
             for i in range(len(mvt)):
                 frame_labels += str(len(label_thresholds)-1)+' '
@@ -135,29 +268,50 @@ def write_data(mvt, file):
                 'arm_2_x3': pos[7][0], 'arm_2_y3': pos[7][1]
             })
 
-def main(n, file = None):
-    if file is None:
-        mvt, collision = generate_mvt()
-    else:
-        mvt, collision = read_mvt(file)
-
+def labelize_and_save(mvt, collision, file, label):
     data_file, labels_file = filenames(file, collision)
-    print(data_file)
-    print(labels_file)
-    if not(n):
+    if label:
         labelize(mvt, collision, labels_file)
     if file is None:
         write_data(mvt, data_file)
 
+def main(n, file = None, type = 'random', multi = None):
+    if multi is None:
+        if file is None:
+            mvt = []
+            while len(mvt) < no_collision_cropping:
+                mvt, collision = generate_mvt(type=type)
+                randomize_config()
+        else:
+            mvt, collision = read_mvt(file)
+
+            labelize_and_save(mvt, collision, file, not(n))
+
+    else:
+        for i in range(multi):
+            mvt, collision = generate_mvt(start_config=get_start_parameters(i, multi))
+            labelize_and_save(mvt, collision, None, True)
+
 if __name__ == '__main__':
-    opts, args = getopt.getopt(sys.argv[1:],"ni:",["ifile=", "nolabel"])
+    opts, args = getopt.getopt(sys.argv[1:],"hni:t:m:",["help", "nolabel", "ifile=", "type=", "multi="])
     file = None
     n = False
+    type = 'random'
+    multi = None
     for opt, arg in opts:
-        if opt in ("-i", "--ifile"):
+        if opt in ("-h", "--help"):
+            print("Usage: % [-h, --help] [-n, --nolabel] [-i, --ifile=<input_file>] [-t, --type=<movment type>] [-m, --multi=<nb_files>]")
+            exit()
+        elif opt in ("-i", "--ifile"):
             file = arg
         elif opt in ("-n", "--nolabel"):
             n = True
+        elif opt in ("-t", "--type"):
+            type = arg if arg in movement_types else 'random'
+        elif opt in ("-m", "--multi"):
+            multi = int(arg)
     if file is not None and n:
         exit()
-    main(n, file)
+    if multi is not None:
+        file = None
+    main(n, file, type, multi)

@@ -26,11 +26,11 @@ class Arm:
         x1 = self.arms_length[0]*cos(config[0]) + x0
         y1 = self.arms_length[0]*sin(config[0]) + y0
 
-        x2 = self.arms_length[1]*cos(config[1]) + x1
-        y2 = self.arms_length[1]*sin(config[1]) + y1
+        x2 = self.arms_length[1]*cos(config[0]+config[1]) + x1
+        y2 = self.arms_length[1]*sin(config[0]+config[1]) + y1
 
-        x3 = self.arms_length[2]*cos(config[2]) + x2
-        y3 = self.arms_length[2]*sin(config[2]) + y2
+        x3 = self.arms_length[2]*cos(config[0]+config[1]+config[2]) + x2
+        y3 = self.arms_length[2]*sin(config[0]+config[1]+config[2]) + y2
 
         return [[x0, y0], [x1, y1], [x2, y2], [x3, y3]]
 
