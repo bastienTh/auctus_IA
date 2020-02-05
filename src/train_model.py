@@ -8,6 +8,7 @@ import glob
 import numpy as np
 import random as rn
 import json
+import sys
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from tensorflow.keras import Model
@@ -86,6 +87,7 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 
+
 # ---------------------------------------------------------------------------------------------------------------------------
 # Save the entire model to a HDF5 file after each epoch (save the best version)
 # Other way to save the model: model.save(output_path+'model.h5') NOTE : not needed because its done automatically in the callback
@@ -109,6 +111,17 @@ history = model.fit(
     callbacks = callbacks_list,
     verbose = 1
 )
+
+
+# ---------------------------------------------------------------------------------------------------------------------------
+### Put the model summary in a txt file
+stdout = sys.stdout
+sys.stdout = open(output_path+'summary.txt', 'w')
+model.summary()
+sys.stdout = stdout
+# print in terminal as well
+model.summary()
+
 
 
 # ---------------------------------------------------------------------------------------------------------------------------

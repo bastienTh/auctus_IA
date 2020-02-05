@@ -19,10 +19,18 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from IPython.display import display
 from load_data import load_data
 
-# Load the model
-value = input("Please enter the model name:\n")
+# Show existing models
+print("============================")
+print("     Existing models:       ")
+print("============================")
+
+os.system("tree -L 2 -- ../models/")
+
+# Chosing and loading the model
+value = input("Please enter the model type and name:\nexemple: <cartesian_coord/my_model>\n")
 model_name = '../models/'+str(value)+'/model.h5'
-model = tf.keras.models.load_model(model_name)
+model = tf.keras.models.load_model(model_name,custom_objects={'spatial_softArgmax':spatial_softArgmax})
+model.summary()
 
 # Reload the data
 Xs, ys, classes = load_data()
