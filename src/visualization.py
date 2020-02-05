@@ -26,6 +26,7 @@ if len(sys.argv) != 2 :
     exit()
 
 x, y = [], []
+x_min, x_max, y_min, y_max = 0,0,0,0
 
 with open(sys.argv[1], newline='') as csvfile:
     spamreader = csv.reader(csvfile)
@@ -39,6 +40,10 @@ with open(sys.argv[1], newline='') as csvfile:
             [float(row[arm_1_y0]), float(row[arm_1_y1]), float(row[arm_1_y2]), float(row[arm_1_y3])],
             [float(row[arm_2_y0]), float(row[arm_2_y1]), float(row[arm_2_y2]), float(row[arm_2_y3])]
         ])
+        x_min = min(x_min, min(min(x[-1][0]),min(x[-1][1])))
+        x_max = max(x_max, max(max(x[-1][0]),max(x[-1][1])))
+        y_min = min(y_min, min(min(y[-1][0]),min(y[-1][1])))
+        y_max = max(y_max, max(max(y[-1][0]),max(y[-1][1])))
 
 
 # create a time array from 0..100 sampled at 0.05 second steps
@@ -46,7 +51,7 @@ dt = 0.005
 t = np.arange(0.0, dt*len(x), dt)
 
 fig = plt.figure()
-ax = fig.add_subplot(111, autoscale_on=False, xlim=(-3, 7), ylim=(-3, 3))
+ax = fig.add_subplot(111, autoscale_on=False, aspect='equal', xlim=(x_min-0.5, x_max+0.5), ylim=(y_min-0.5, y_max+0.5))
 ax.grid()
 
 time_template = 'time = %.1fs'
@@ -72,7 +77,7 @@ def animate(i):
 ani = animation.FuncAnimation(fig, animate, np.arange(1, len(x)),
                               interval=1000*dt, blit=True, init_func=init, repeat=False)
 
-print(t[-1])
+#print(t[-1])
 # ani.save('double_pendulum.mp4', fps=15)
 plt.show()
 
