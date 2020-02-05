@@ -39,16 +39,19 @@ class Arm:
         final_config = self.get_random_config()
         if final_config is None:
             return None
+        mvt = self.goto_from(final_config, self.current_config)
         self.current_config = final_config
-        return goto_from(final_config, self.current_config)
+        return mvt
 
-    def goto_from(final_config, current_config):
-        config_sign = [x/abs(x) if x != 0 else 0 for x in (final_config-current_config)]
-        mvt = np.array([current_config[:]])
-        while not mvt[-1] != final_config:
+    def goto_from(self, final_config, current_config):
+        config_sign = np.array([x/abs(x) if x != 0 else 0 for x in (final_config-current_config)])
+        mvt = [current_config.tolist()]
+        while not (mvt[-1] == final_config).all():
             next_pos = mvt[-1] + config_sign*self.speed
-            new_pos = config_sign*np.array([min(config_sign*next_pos[i], config_sign*final_config[i]) for i in range(len(final_config))])
-            mvt.append[new_pos[:]]
+            new_pos = [min(next_pos[i], final_config[i]) if config_sign[i] > 0 else max(next_pos[i], final_config[i]) for i in range(len(final_config))]
+            mvt.append(new_pos)
+        mvt_carth = [self.config_to_pos(config) for config in mvt]
+        return mvt_carth
 
     def get_random_config(self):
         theta0 = random.uniform(self.ranges[0][0], self.ranges[0][1]) if self.movable[0] else self.current_config[0]

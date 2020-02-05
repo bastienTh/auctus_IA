@@ -107,7 +107,7 @@ def get_start_parameters(current_pos, max_pos):
 
 movement_types = {
     'random':{
-        'base1':[0,0], 'base2':[4,0],
+        'base1':[0,0], 'base2':[8,0],
         'config1':[pi/2, 0, 0], 'config2':[pi/2, 0, 0],
         'movable1':[True, True, True], 'movable2':[True, True, True]
     },
@@ -148,7 +148,7 @@ def mvt_collision(mvt, arm1_radius, arm2_radius):
 
 # ------------------------------------------------------
 # Generate a movement and structure the data for the CSV
-def generate_mvt(type='random', start_config=None):
+def generate_mvt(nb_mvts=1, type='random', start_config=None):
     if start_config is None:
         start_config = movement_types[type]
 
@@ -157,31 +157,30 @@ def generate_mvt(type='random', start_config=None):
     arm2 = Arm(base_pos=start_config['base2'], joints_config=start_config['config2'], radius=arm_radius)
     arm2.with_constraints(movable=start_config['movable2'])
 
-    mvts = []
     collision = False
-    i = 0
-    while ((i < 80) and (collision == False)):
-        assert change speed
-        mvt1 = arm1.goto_random_pos(100)
-        mvt2 = arm2.goto_random_pos(100)
-        mvt  = [mvt1[i] + mvt2[i] for i in range(len(mvt1))]
-        for j in range(len(mvt)):
-            if mvt_collision(mvt[j], arm1.get_radius(), arm2.get_radius()):
-                mvt = mvt[:j+1]
-                collision = True
-                break
-        i+=1
-        mvts = mvts + mvt
+    mvt_number = 0
+    mvt1 = []
+    mvt2 = []
+    while mvt_number < nb_mvts:
+        mvt1 += arm1.goto_random_pos()
+        mvt2 += arm2.goto_random_pos()
+        mvt_number += 1
+    mvt  = [mvt1[min(i, len(mvt1)-1)] + mvt2[min(i, len(mvt2)-1)] for i in range(max(len(mvt1), len(mvt2)))]
+    for j in range(len(mvt)):
+        if mvt_collision(mvt[j], arm1.get_radius(), arm2.get_radius()):
+            mvt = mvt[:j+1]
+            collision = True
+            break
 
     if not collision:
-        mvts = mvts[:-no_collision_cropping]
+        mvt = mvt[:-no_collision_cropping]
 
     # keep only the last moves (near the collision)
-    if label_thresholds[-1] not in (-inf, inf) and len(mvts) > label_thresholds[-1]:
-        mvts = mvts[-label_thresholds[-1]:]
+    if label_thresholds[-1] not in (-inf, inf) and len(mvt) > label_thresholds[-1]:
+        mvt = mvt[-label_thresholds[-1]:]
 
-    assert len(mvts) <= label_thresholds[-1]
-    return mvts, collision
+    assert len(mvt) <= label_thresholds[-1]
+    return mvt, collision
 
 def read_mvt(file):
     mvt = []
@@ -275,32 +274,33 @@ def labelize_and_save(mvt, collision, file, label):
     if file is None:
         write_data(mvt, data_file)
 
-def main(n, file = None, type = 'random', multi = None):
+def main(n, file = None, type = 'random', multi = None, nb_mvts = 1):
     if multi is None:
         if file is None:
             mvt = []
             while len(mvt) < no_collision_cropping:
-                mvt, collision = generate_mvt(type=type)
+                mvt, collision = generate_mvt(nb_mvts=nb_mvts, type=type)
                 randomize_config()
         else:
             mvt, collision = read_mvt(file)
 
-            labelize_and_save(mvt, collision, file, not(n))
+        labelize_and_save(mvt, collision, file, not(n))
 
     else:
         for i in range(multi):
-            mvt, collision = generate_mvt(start_config=get_start_parameters(i, multi))
+            mvt, collision = generate_mvt(nb_mvts=nb_mvts, type=type, start_config=get_start_parameters(i, multi))
             labelize_and_save(mvt, collision, None, True)
 
 if __name__ == '__main__':
-    opts, args = getopt.getopt(sys.argv[1:],"hni:t:m:",["help", "nolabel", "ifile=", "type=", "multi="])
+    opts, args = getopt.getopt(sys.argv[1:],"hni:t:m:M:",["help", "nolabel", "ifile=", "type=", "multi=", "mvts="])
     file = None
     n = False
     type = 'random'
     multi = None
+    nb_mvts = 80
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print("Usage: % [-h, --help] [-n, --nolabel] [-i, --ifile=<input_file>] [-t, --type=<movment type>] [-m, --multi=<nb_files>]")
+            print("Usage: % [-h, --help] [-n, --nolabel] [-i, --ifile=<input_file>] [-t, --type=<movment type>] [-m, --multi=<nb_files>] [-M, --mvts=<number of movments per simulation>]")
             exit()
         elif opt in ("-i", "--ifile"):
             file = arg
@@ -310,8 +310,10 @@ if __name__ == '__main__':
             type = arg if arg in movement_types else 'random'
         elif opt in ("-m", "--multi"):
             multi = int(arg)
+        elif opt in ("-M", "--mvts"):
+            nb_mvts = int(arg)
     if file is not None and n:
         exit()
     if multi is not None:
         file = None
-    main(n, file, type, multi)
+    main(n, file, type, multi, nb_mvts)
