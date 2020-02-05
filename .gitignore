@@ -1,1 +1,11 @@
 src/__pycache__
+src/main_ai4industry.py
+
+# Ignore data
+*data.csv
+*labels.txt
+
+# Ignore models
+*acc_loss.png
+*heatmap.png
+*model.h5
