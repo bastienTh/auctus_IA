@@ -7,6 +7,7 @@ from robot_control import Arm
 from intersection import segments_distance, LineSegment, Point
 from infinity import inf
 import sys, getopt # for cli args parsing
+import os # for directories
 from math import pi, ceil
 import random
 
@@ -21,6 +22,38 @@ label_thresholds = [30, 60, 90, 120]
 no_collision_cropping = label_thresholds[-2]
 
 arm_radius = 0.05
+
+movement_types = {
+    'random':{
+        'base1':[0,0], 'base2':[4,0],
+        'config1':[pi/2, 0, 0], 'config2':[pi/2, 0, 0],
+        'movable1':[True, True, True], 'movable2':[True, True, True]
+    },
+    'LFixedHorizontal_lastRFree': {
+        'base1':[0,0], 'base2':[5.5,0],
+        'config1':[0, 0, 0], 'config2':[pi, 0, random.uniform(-pi, pi)],
+        'movable1':[False, False, False], 'movable2':[False, False, True]
+    },
+    'RFixedHorizontal_lastLFree': {
+        'base1':[0,0], 'base2':[5.5,0],
+        'config1':[0, 0, random.uniform(-pi, pi)], 'config2':[pi, 0, 0],
+        'movable1':[False, False, True], 'movable2':[False, False, False]
+    },
+    'LFixed_lastRFree': {
+        'base1':[0,0], 'base2':[5,0],
+        'config1':[pi/4, -pi/4, 0], 'config2':[3*pi/4, pi/4, random.uniform(-pi, pi)],
+        'movable1':[False, False, False], 'movable2':[False, False, True]
+    },
+    'RFixed_lastLFree': {
+        'base1':[0,0], 'base2':[5,0],
+        'config1':[pi/4, -pi/4, random.uniform(-pi, pi)], 'config2':[3*pi/4, pi/4, 0],
+        'movable1':[False, False, True], 'movable2':[False, False, False]
+    },
+}
+
+def randomize_config():
+    movement_types['LFixedHorizontal_lastRFree']['config2'] = [-pi, 0, random.uniform(-pi, pi)]
+    movement_types['RFixedHorizontal_lastLFree']['config1'] = [0, 0, random.uniform(-pi, pi)]
 
 # How to generate positions procedurally
 # 1) Choose starting config
@@ -105,38 +138,84 @@ def get_start_parameters(current_pos, max_pos):
 
     return parameters
 
-movement_types = {
-    'random':{
-        'base1':[0,0], 'base2':[8,0],
-        'config1':[pi/2, 0, 0], 'config2':[pi/2, 0, 0],
-        'movable1':[True, True, True], 'movable2':[True, True, True]
-    },
-    'LFixedHorizontal_lastRFree': {
-        'base1':[0,0], 'base2':[5.5,0],
-        'config1':[0, 0, 0], 'config2':[pi, 0, random.uniform(-pi, pi)],
-        'movable1':[False, False, False], 'movable2':[False, False, True]
-    },
-    'RFixedHorizontal_lastLFree': {
-        'base1':[0,0], 'base2':[5.5,0],
-        'config1':[0, 0, random.uniform(-pi, pi)], 'config2':[pi, 0, 0],
-        'movable1':[False, False, True], 'movable2':[False, False, False]
-    },
-    'LFixed_lastRFree': {
-        'base1':[0,0], 'base2':[5,0],
-        'config1':[pi/4, -pi/4, 0], 'config2':[3*pi/4, pi/4, random.uniform(-pi, pi)],
-        'movable1':[False, False, False], 'movable2':[False, False, True]
-    },
-    'RFixed_lastLFree': {
-        'base1':[0,0], 'base2':[5,0],
-        'config1':[pi/4, -pi/4, random.uniform(-pi, pi)], 'config2':[3*pi/4, pi/4, 0],
-        'movable1':[False, False, True], 'movable2':[False, False, False]
-    },
-}
+# ------------------------------------------------------
+# Create and complete the CSV representing this mouvement
+def write_data(mvt, file):
+    with open(file, 'w', newline='') as csvfile:
+        fieldnames =[
+            'arm_1_x0','arm_1_y0',
+            'arm_1_x1','arm_1_y1',
+            'arm_1_x2','arm_1_y2',
+            'arm_1_x3','arm_1_y3',
 
-def randomize_config():
-    movement_types['LFixedHorizontal_lastRFree']['config2'] = [-pi, 0, random.uniform(-pi, pi)]
-    movement_types['RFixedHorizontal_lastLFree']['config1'] = [0, 0, random.uniform(-pi, pi)]
+            'arm_2_x0','arm_2_y0',
+            'arm_2_x1','arm_2_y1',
+            'arm_2_x2','arm_2_y2',
+            'arm_2_x3','arm_2_y3'
+        ]
 
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for pos in mvt:
+            writer.writerow({
+                'arm_1_x0': pos[0][0], 'arm_1_y0': pos[0][1],
+                'arm_1_x1': pos[1][0], 'arm_1_y1': pos[1][1],
+                'arm_1_x2': pos[2][0], 'arm_1_y2': pos[2][1],
+                'arm_1_x3': pos[3][0], 'arm_1_y3': pos[3][1],
+
+                'arm_2_x0': pos[4][0], 'arm_2_y0': pos[4][1],
+                'arm_2_x1': pos[5][0], 'arm_2_y1': pos[5][1],
+                'arm_2_x2': pos[6][0], 'arm_2_y2': pos[6][1],
+                'arm_2_x3': pos[7][0], 'arm_2_y3': pos[7][1]
+            })
+
+# ------------------------------------------------------
+# Create and complete the descriptor file (.txt) of this mouvement
+def labelize(mvt, collision, file):
+    with open(file, 'w', newline='') as descriptor_file:
+        nb_labels = [0]*len(label_thresholds)
+        frame_labels=''
+        if collision:
+            label = len(mvt)-1
+            for pos in range(len(mvt)):
+                for label_index in range(len(label_thresholds)):
+                    if label < label_thresholds[label_index]:
+                        nb_labels[label_index] += 1
+                        frame_labels += str(label_index)+' '
+                        break
+                label -= 1
+        else:
+            nb_labels[-1] = len(mvt)
+            for i in range(len(mvt)):
+                frame_labels += str(len(label_thresholds)-1)+' '
+
+        descriptor_file.write(frame_labels + '\n')
+        for i in range(len(nb_labels)):
+            descriptor_file.write('label_%d: %d\n' % (i, nb_labels[i]))
+
+# ------------------------------------------------------
+# Name of the CSV file (diferent for every new generation)
+def filenames(file, type, collision):
+    if file is None:
+        folder = '../data/' + type + '/'
+        if collision:
+            folder+='collision/'
+        else:
+            folder+='no_collision/'
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        now = datetime.now()
+        name=folder+str(now.year)+'_'+str(now.month)+'_'+str(now.day)+'__'+str(now.hour)+'-'+str(now.minute)+'-'+str(now.second)+'--'+str(now.microsecond)
+    else:
+        name = file[:-len('_data.csv')]
+    return name + '_data.csv', name + '_labels.txt'
+
+def labelize_and_save(mvt, collision, type, file, label):
+    data_file, labels_file = filenames(file, type, collision)
+    if label:
+        labelize(mvt, collision, labels_file)
+    if file is None:
+        write_data(mvt, data_file)
 
 def mvt_collision(mvt, arm1_radius, arm2_radius):
     for i in range(3):
@@ -145,6 +224,21 @@ def mvt_collision(mvt, arm1_radius, arm2_radius):
                                     LineSegment(Point(mvt[j][0],mvt[j][1]), Point(mvt[j+1][0],mvt[j+1][1]))) < (arm1_radius + arm2_radius):
                 return True
     return False
+
+def read_mvt(file):
+    mvt = []
+    collision = False
+    with open(file, newline='') as csvfile:
+        spamreader = csv.reader(csvfile)
+        spamreader.__next__()
+        for row in spamreader:
+            pos = [[float(row[2*i+j]) for j in (0, 1)] for i in range(len(row)//2)]
+
+            mvt.append(pos)
+            if mvt_collision(pos, arm_radius, arm_radius):
+                collision = True
+                break
+    return mvt, collision
 
 # ------------------------------------------------------
 # Generate a movement and structure the data for the CSV
@@ -182,98 +276,6 @@ def generate_mvt(nb_mvts=1, type='random', start_config=None):
     assert len(mvt) <= label_thresholds[-1]
     return mvt, collision
 
-def read_mvt(file):
-    mvt = []
-    collision = False
-    with open(file, newline='') as csvfile:
-        spamreader = csv.reader(csvfile)
-        spamreader.__next__()
-        for row in spamreader:
-            pos = [[float(row[2*i+j]) for j in (0, 1)] for i in range(len(row)//2)]
-
-            mvt.append(pos)
-            if mvt_collision(pos, arm_radius, arm_radius):
-                collision = True
-                break
-    return mvt, collision
-
-# ------------------------------------------------------
-# Name of the CSV file (diferent for every new generation)
-def filenames(file, collision):
-    if file is None:
-        if collision:
-            folder='../data/collision/'
-        else:
-            folder='../data/no_collision/'
-        now = datetime.now()
-        name=folder+str(now.year)+'_'+str(now.month)+'_'+str(now.day)+'__'+str(now.hour)+':'+str(now.minute)+':'+str(now.second)+'::'+str(now.microsecond)
-    else:
-        name = file[:-len('_data.csv')]
-    return name + '_data.csv', name + '_labels.txt'
-
-
-# ------------------------------------------------------
-# Create and complete the descriptor file (.txt) of this mouvement
-def labelize(mvt, collision, file):
-    with open(file, 'w', newline='') as descriptor_file:
-        nb_labels = [0]*len(label_thresholds)
-        frame_labels=''
-        if collision:
-            label = len(mvt)-1
-            for pos in range(len(mvt)):
-                for label_index in range(len(label_thresholds)):
-                    if label < label_thresholds[label_index]:
-                        nb_labels[label_index] += 1
-                        frame_labels += str(label_index)+' '
-                        break
-                label -= 1
-        else:
-            nb_labels[-1] = len(mvt)
-            for i in range(len(mvt)):
-                frame_labels += str(len(label_thresholds)-1)+' '
-
-        descriptor_file.write(frame_labels + '\n')
-        for i in range(len(nb_labels)):
-            descriptor_file.write('label_%d: %d\n' % (i, nb_labels[i]))
-
-# ------------------------------------------------------
-# Create and complete the CSV representing this mouvement
-def write_data(mvt, file):
-    with open(file, 'w', newline='') as csvfile:
-        fieldnames =[
-            'arm_1_x0','arm_1_y0',
-            'arm_1_x1','arm_1_y1',
-            'arm_1_x2','arm_1_y2',
-            'arm_1_x3','arm_1_y3',
-
-            'arm_2_x0','arm_2_y0',
-            'arm_2_x1','arm_2_y1',
-            'arm_2_x2','arm_2_y2',
-            'arm_2_x3','arm_2_y3'
-        ]
-
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for pos in mvt:
-            writer.writerow({
-                'arm_1_x0': pos[0][0], 'arm_1_y0': pos[0][1],
-                'arm_1_x1': pos[1][0], 'arm_1_y1': pos[1][1],
-                'arm_1_x2': pos[2][0], 'arm_1_y2': pos[2][1],
-                'arm_1_x3': pos[3][0], 'arm_1_y3': pos[3][1],
-
-                'arm_2_x0': pos[4][0], 'arm_2_y0': pos[4][1],
-                'arm_2_x1': pos[5][0], 'arm_2_y1': pos[5][1],
-                'arm_2_x2': pos[6][0], 'arm_2_y2': pos[6][1],
-                'arm_2_x3': pos[7][0], 'arm_2_y3': pos[7][1]
-            })
-
-def labelize_and_save(mvt, collision, file, label):
-    data_file, labels_file = filenames(file, collision)
-    if label:
-        labelize(mvt, collision, labels_file)
-    if file is None:
-        write_data(mvt, data_file)
-
 def main(n, file = None, type = 'random', multi = None, nb_mvts = 1):
     if multi is None:
         if file is None:
@@ -284,12 +286,12 @@ def main(n, file = None, type = 'random', multi = None, nb_mvts = 1):
         else:
             mvt, collision = read_mvt(file)
 
-        labelize_and_save(mvt, collision, file, not(n))
+        labelize_and_save(mvt, collision, type, file, not(n))
 
     else:
         for i in range(multi):
             mvt, collision = generate_mvt(nb_mvts=nb_mvts, type=type, start_config=get_start_parameters(i, multi))
-            labelize_and_save(mvt, collision, None, True)
+            labelize_and_save(mvt, collision, type, None, True)
 
 if __name__ == '__main__':
     opts, args = getopt.getopt(sys.argv[1:],"hni:t:m:M:",["help", "nolabel", "ifile=", "type=", "multi=", "mvts="])
