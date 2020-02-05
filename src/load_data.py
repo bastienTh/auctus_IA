@@ -5,7 +5,7 @@ import glob
 import numpy as np
 import random as rn
 
-from param import *
+from parameters import *
 
 def load_data():
     filepaths =  glob.glob("../data/*/*.csv")

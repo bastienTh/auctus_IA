@@ -18,29 +18,41 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from IPython.display import display
 from load_data import load_data
+from parameters import *
 
-from param import *
 
+# ---------------------------------------------------------------------------------------------------------------------------
 ### Setting seeds
-# tf.random.set_seed(12345) # other version of tensorflow
 tf.random.set_random_seed(12345)
+# tf.random.set_seed(12345) # other version of tensorflow
 np.random.seed(12345)
 rn.seed(12345)
 
-name = input("Please enter the model name:\n")
-output_path='../models/'+str(name)+'/'
-if not os.path.exists(output_path):
-    os.makedirs(output_path)
-else:
-    print("Error: this model already exist, pick another name")
-    exit(0)
-
-Xs, ys, classes = load_data()
-nb_classes = len(list(classes))
 
 # ---------------------------------------------------------------------------------------------------------------------------
+### Picking a name for the model (should not exist already)
+i=0
+while (i<4):
+    if i==3:
+        print("Error: this model already exist, program stoped")
+        exit(0)
+    name = input("Please enter the model name:\n")
+    output_path='../models/'+MODE+'/'+str(name)+'/'
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+        i=4
+    else:
+        print("Error: this model already exist, pick another name")
+        i = i+1
+
+
+# ---------------------------------------------------------------------------------------------------------------------------
+### Loading the data
+Xs, ys, classes = load_data()
+nb_classes = len(list(classes))
 Xs = np.array(Xs)
 ys = np.array(ys)
+
 
 classes = set(ys)
 ys = to_categorical(ys, nb_classes)
@@ -51,8 +63,11 @@ X_train, X_val, y_train, y_val = train_test_split(Xs, ys,
                                                   random_state=12345, 
                                                   shuffle=True )
 
+
 # ---------------------------------------------------------------------------------------------------------------------------
-# # Dense model
+### IA models
+
+### Dense model
 # model = Sequential()
 # model.add(Flatten())
 # model.add(Dense(100, activation='relu', input_shape=(nb_features, 80)))
@@ -60,7 +75,7 @@ X_train, X_val, y_train, y_val = train_test_split(Xs, ys,
 # model.add(Dense(100, activation='relu', input_shape=(nb_features, 80)))
 # model.add(Dense(nb_classes, activation='softmax'))
 
-# LTSM
+### LTSM
 model = Sequential()
 model.add(LSTM(LSTM_SIZE,return_sequences=True))
 model.add(Flatten())
@@ -73,7 +88,7 @@ model.compile(loss='categorical_crossentropy',
 
 # ---------------------------------------------------------------------------------------------------------------------------
 # Save the entire model to a HDF5 file after each epoch (save the best version)
-# model.save(output_path+'model.h5') NOTE : not needed because its done automatically in the callback
+# Other way to save the model: model.save(output_path+'model.h5') NOTE : not needed because its done automatically in the callback
 callbacks_list = [
     ModelCheckpoint(
         filepath = output_path+'/model.h5',
@@ -82,7 +97,9 @@ callbacks_list = [
     EarlyStopping(monitor='val_acc', patience=1, verbose=1)
 ]
 
+
 # ---------------------------------------------------------------------------------------------------------------------------
+### model training
 history = model.fit(
     X_train,
     y_train,
@@ -93,7 +110,9 @@ history = model.fit(
     verbose = 1
 )
 
+
 # ---------------------------------------------------------------------------------------------------------------------------
+### Ploting the acc and loss
 fig, (ax1,ax2) = plt.subplots(1, 2)
 
 ax1.plot(history.history['val_loss'], label='val_loss')
@@ -112,9 +131,11 @@ fig.legend()
 plt.savefig(output_path+'acc_loss.png')
 # plt.show()
 
+
 # ---------------------------------------------------------------------------------------------------------------------------
-# model.predict(X_train[0], use_multiprocessing=True, batch_size=1)
+### Ploting the results over the entire set of data
 plt.clf() # Clear figure
+# model.predict(X_train[0], use_multiprocessing=True, batch_size=1)
 predicted = model.predict_classes(X_val)
 target = np.argmax(y_val, axis=1)
 
