@@ -14,7 +14,7 @@ import random
 # We labelize each frame according to these thresholds. If the collision happens
 # under thresholds[i] frames, the frame will be labelized 'i'.
 # label_thresholds = [30, 60, 90, inf]
-label_thresholds = [30, 60, 90, 120]
+label_thresholds = [100, 200, 300, 400]
 
 # We crop that many last frames from all videos with no collisions to avoid
 # mislabelling in case of collision right after the end of the video. This
