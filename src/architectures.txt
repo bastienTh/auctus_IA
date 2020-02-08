@@ -1,0 +1,37 @@
+taille ddes time_window --> 30 50 70
+Overlap                 --> ne change que le nombre de donnée pour l'entrainement 0.3 pour avoir pas mal de donnée
+Batch_size              --> plus c'est grand mieux c'est il me semble seulement plus c'est grand plus c'est lourd pour le PC
+                            512 peut être ??
+EPOCHS                  --> aucune idée, je dirais entre 3 et 5 pour les petit réseaux et plus pour les grand réseaux, 
+                            de toute façon l'entrainement s'arrête avant la fin si tensorflow considère que ça ne sert plus à rien. 
+                            Et le modèle enregistré est la meilleur version du modèle
+TEST_SIZE               --> aucune idée, 0.3 me semble OK pour la validation
+
+
+
+# ----------------------------------------------------
+DENSE (A,B,C) --> 3 couches caché avec respectivement A,B et C noeuds par couche cachée
+# ----------------------------------------------------
+(100)
+(300)
+(500)
+
+(100,100)
+(300,300)
+(500,500)
+
+(100,100,100)
+(100,300,100)
+(200,300,200)
+
+(100,100,100,100,100)
+(200,200,200,200,200)
+
+# ----------------------------------------------------
+LSTM juste le nb de noeuds
+# ----------------------------------------------------
+256
+512
+1024
+2048
+4096

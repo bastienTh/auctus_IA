@@ -93,11 +93,16 @@ X_train, X_val, y_train, y_val = train_test_split(Xs, ys,
 if (IA_NUMBER == 0):
     ### Dense model
     model = Sequential()
+
+    # Input layer, necessary
     model.add(Flatten())
+
+    # Hidden layers
     model.add(Dense(100, activation='relu'))
     model.add(Dense(100, activation='relu'))
     model.add(Dense(100, activation='relu'))
-    # model.add(Dense(100, activation='relu', input_shape=(nb_features, 80)))
+
+    # Output layer, necessary
     model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 1):
     ### LTSM
