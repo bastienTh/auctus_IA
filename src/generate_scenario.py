@@ -30,7 +30,7 @@ movement_types = {
         'movable1':[False, False, False], 'movable2':[False, False, True]
     },
     '3_2': {
-        'base1':[0,0], 'base2':[5,0],
+        'base1':[0,0], 'base2':[5.5,0],
         'config1':[pi/4, -pi/4, 0], 'config2':[3*pi/4, pi/4, random.uniform(-pi, pi)],
         'movable1':[False, False, False], 'movable2':[False, False, True]
     },
@@ -40,7 +40,7 @@ movement_types = {
         'movable1':[False, False, False], 'movable2':[False, True, True]
     },
     '3_1': {
-        'base1':[0,0], 'base2':[5,0],
+        'base1':[0,0], 'base2':[5.5,0],
         'config1':[pi/4, -pi/4, 0], 'config2':[3*pi/4, random.uniform(-pi, pi), random.uniform(-pi, pi)],
         'movable1':[False, False, False], 'movable2':[False, True, True]
     },
@@ -50,7 +50,7 @@ movement_types = {
         'movable1':[False, False, False], 'movable2':[True, True, True]
     },
     '3_0': {
-        'base1':[0,0], 'base2':[5,0],
+        'base1':[0,0], 'base2':[5.5,0],
         'config1':[pi/4, -pi/4, 0], 'config2':[random.uniform(0, pi), random.uniform(-pi, pi), random.uniform(-pi, pi)],
         'movable1':[False, False, False], 'movable2':[True, True, True]
     },
@@ -60,7 +60,7 @@ movement_types = {
         'movable1':[False, False, True], 'movable2':[False, False, True]
     },
     '2_2': {
-        'base1':[0,0], 'base2':[5,0],
+        'base1':[0,0], 'base2':[5.5,0],
         'config1':[pi/4, -pi/4, random.uniform(-pi, pi)], 'config2':[3*pi/4, pi/4, random.uniform(-pi, pi)],
         'movable1':[False, False, True], 'movable2':[False, False, True]
     },
@@ -70,7 +70,7 @@ movement_types = {
         'movable1':[False, False, True], 'movable2':[False, True, True]
     },
     '2_1': {
-        'base1':[0,0], 'base2':[5,0],
+        'base1':[0,0], 'base2':[5.5,0],
         'config1':[pi/4, -pi/4, random.uniform(-pi, pi)], 'config2':[3*pi/4, random.uniform(-pi, pi), random.uniform(-pi, pi)],
         'movable1':[False, False, True], 'movable2':[False, True, True]
     },
@@ -80,7 +80,7 @@ movement_types = {
         'movable1':[False, False, True], 'movable2':[True, True, True]
     },
     '2_0': {
-        'base1':[0,0], 'base2':[5,0],
+        'base1':[0,0], 'base2':[5.5,0],
         'config1':[pi/4, -pi/4, random.uniform(-pi, pi)], 'config2':[random.uniform(0, pi), random.uniform(-pi, pi), random.uniform(-pi, pi)],
         'movable1':[False, False, True], 'movable2':[True, True, True]
     },
@@ -90,7 +90,7 @@ movement_types = {
         'movable1':[False, True, True], 'movable2':[False, True, True]
     },
     '1_1': {
-        'base1':[0,0], 'base2':[5,0],
+        'base1':[0,0], 'base2':[5.5,0],
         'config1':[pi/4, random.uniform(-pi, pi), random.uniform(-pi, pi)], 'config2':[3*pi/4, random.uniform(-pi, pi), random.uniform(-pi, pi)],
         'movable1':[False, True, True], 'movable2':[False, True, True]
     },
@@ -100,19 +100,14 @@ movement_types = {
         'movable1':[False, True, True], 'movable2':[True, True, True]
     },
     '1_0': {
-        'base1':[0,0], 'base2':[5,0],
+        'base1':[0,0], 'base2':[5.5,0],
         'config1':[pi/4, random.uniform(-pi, pi), random.uniform(-pi, pi)], 'config2':[random.uniform(0, pi), random.uniform(-pi, pi), random.uniform(-pi, pi)],
         'movable1':[False, True, True], 'movable2':[True, True, True]
     },
-    '0_0H': {
-        'base1':[0,0], 'base2':[4.5,0],
-        'config1':[random.uniform(0, pi), random.uniform(-pi, pi), random.uniform(-pi, pi)], 'config2':[random.uniform(0, pi), random.uniform(-pi, pi), random.uniform(-pi, pi)],
-        'movable1':[False, True, True], 'movable2':[True, True, True]
-    },
     '0_0': {
-        'base1':[0,0], 'base2':[4,0],
+        'base1':[0,0], 'base2':[5.5,0],
         'config1':[random.uniform(0, pi), random.uniform(-pi, pi), random.uniform(-pi, pi)], 'config2':[random.uniform(0, pi), random.uniform(-pi, pi), random.uniform(-pi, pi)],
-        'movable1':[False, True, True], 'movable2':[True, True, True]
+        'movable1':[True, True, True], 'movable2':[True, True, True]
     },
 }
 
@@ -345,16 +340,34 @@ def swap_config(config):
     config['movable1'], config['movable2'] = config['movable2'], config['movable1']
     return config
 
-def make_and_save_mvt(type, nb_mvts, label):
-    start_config = movement_types[type]
-    if random.choice([True, False]):
-        start_config = swap_config(start_config)
+def make_and_save_mvt(type, nb_mvts, label, multi=0):
+    one_pass = (multi == 0)
+    nb_col = 0
+    nb_no_col = 0
+    tries = 0
+    while ((nb_col < multi or nb_no_col < multi//5) and tries < multi//2) or one_pass:
+        start_config = movement_types[type]
+        if random.choice([True, False]):
+            start_config = swap_config(start_config)
 
-    mvt = []
-    while len(mvt) < no_collision_cropping:
-        mvt, collision = generate_mvt(start_config, nb_mvts=nb_mvts)
-        randomize_config()
-    labelize_and_save(mvt, collision, type, None, label)
+        mvt = []
+        timeout = 0
+        while len(mvt) < no_collision_cropping and timeout < 10:
+            mvt, collision = generate_mvt(start_config, nb_mvts=nb_mvts)
+            randomize_config()
+            timeout += 1
+        if (((collision and nb_col < multi) or (not collision and nb_no_col < multi//5))
+            and timeout < 10) or one_pass :
+            if collision:
+                nb_col += 1
+            else:
+                nb_no_col += 1
+            tries = 0
+            labelize_and_save(mvt, collision, type, None, label)
+        print("%d (%d)       " % (nb_col+nb_no_col, tries), end="\r")
+        tries += 1
+        if one_pass:
+            break
 
 def main(n, file = None, type = '0_0', multi = None, nb_mvts = 1):
     if multi is None:
@@ -367,15 +380,13 @@ def main(n, file = None, type = '0_0', multi = None, nb_mvts = 1):
             labelize_and_save(mvt, collision, type, file, not(n))
 
     else:
-        for i in range(multi):
-            if type == 'all':
-                print(i, end="\r")
-                for current_type in movement_types:
-                    make_and_save_mvt(current_type, nb_mvts, not(n))
-            else:
-                if i%10 == 0:
-                    print(i, end="\r")
-                make_and_save_mvt(current_type, nb_mvts, not(n))
+        if type == 'all':
+            for current_type in movement_types:
+                print(current_type)
+                make_and_save_mvt(current_type, nb_mvts, not(n), multi)
+        else:
+            make_and_save_mvt(type, nb_mvts, not(n), multi)
+
 
 if __name__ == '__main__':
     opts, args = getopt.getopt(sys.argv[1:],"hni:t:m:M:",["help", "nolabel", "ifile=", "type=", "multi=", "mvts="])
