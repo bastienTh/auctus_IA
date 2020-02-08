@@ -19,7 +19,49 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from IPython.display import display
 from load_data import load_data
-from parameters import *
+# from parameters import *
+# This might be useless
+modes=['cartesian_coord','distance_mat'] # we could had anything, using speed or whatever
+MODE=modes[0]
+# ---------------------------------------------------------------------------------------------------------------------------
+### Usage
+if len(sys.argv) != 10 :
+    print("=============================")
+    print("Usage:",sys.argv[0],"takes 9 arguments (given",len(sys.argv)-1,") as listed:")
+    print("$1 <data_path>                       Path to the data. This folder must have folder and subfoler as follow:")
+    print("   <data_path>/<scenario_names>/collision/*.csv")
+    print("              /no_collision/*.csv")
+    print("$2 <model_name>                      Model name, must be new, otherwise the program ask for another name which")
+    print("                                     will block the program and wait for user input")
+    print("$3 <bool (0 or 1) collision_only>    To only get the collision csv")
+    print("$4 <TIME_WINDOW_SIZE>                How much frames per time_window")
+    print("$5 <OVERLAP_RATIO>                   Ratio in ]0;1[, a ratio=0.2 means step will be 20% of the TW_SIZE")
+    print("$6 <BATCH_SIZE>                      Batch size for training")
+    print("$7 <EPOCHS>                          Epochs for training")
+    print("$8 <TEST_SIZE>                       Size of the data used for test in ]0;1[")
+    print("$9 <IA_number>                       Which of the IA in the train_model file we want to train (integer in {0,1,2,3, ... ,n} with n last implemented network)")
+    exit()
+# ---------------------------------------------------------------------------------------------------------------------------
+### Setting parameters from command input name of the model (should not exist already)
+DATA_PATH = sys.argv[1]
+MODEL_NAME = sys.argv[2]
+BOOL_COLLISION_ONLY = (sys.argv[3] == '1')
+TIME_WINDOW_SIZE = int(sys.argv[4])
+OVERLAP_RATIO = float(sys.argv[5])
+STEP = int(TIME_WINDOW_SIZE*OVERLAP_RATIO)
+BATCH_SIZE = int(sys.argv[6])
+EPOCHS = int(sys.argv[7])
+TEST_SIZE = float(sys.argv[8])
+IA_NUMBER = int(sys.argv[9])
+
+output_path_memo='../models/'+MODE+'/'+str(MODEL_NAME)
+output_path=output_path_memo
+i=1
+while (os.path.exists(output_path)):
+    output_path=output_path_memo+'('+str(i)+')'
+    i=i+1
+os.makedirs(output_path)
+
 
 
 # ---------------------------------------------------------------------------------------------------------------------------
@@ -31,29 +73,10 @@ rn.seed(12345)
 
 
 # ---------------------------------------------------------------------------------------------------------------------------
-### Picking a name for the model (should not exist already)
-i=0
-while (i<4):
-    if i==3:
-        print("Error: this model already exist, program stoped")
-        exit(0)
-    name = input("Please enter the model name:\n")
-    output_path='../models/'+MODE+'/'+str(name)+'/'
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-        i=4
-    else:
-        print("Error: this model already exist, pick another name")
-        i = i+1
-
-
-# ---------------------------------------------------------------------------------------------------------------------------
-### Loading the data
-Xs, ys, classes = load_data()
+Xs, ys, classes = load_data(path=DATA_PATH,collision_only=BOOL_COLLISION_ONLY, TIME_WINDOW_SIZE=TIME_WINDOW_SIZE, STEP=STEP)
 nb_classes = len(list(classes))
 Xs = np.array(Xs)
 ys = np.array(ys)
-
 
 classes = set(ys)
 ys = to_categorical(ys, nb_classes)
@@ -67,20 +90,38 @@ X_train, X_val, y_train, y_val = train_test_split(Xs, ys,
 
 # ---------------------------------------------------------------------------------------------------------------------------
 ### IA models
+if (IA_NUMBER == 0):
+    ### Dense model
+    model = Sequential()
+    model.add(Flatten())
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    # model.add(Dense(100, activation='relu', input_shape=(nb_features, 80)))
+    model.add(Dense(nb_classes, activation='softmax'))
+elif (IA_NUMBER == 1):
+    ### LTSM
+    model = Sequential()
+    model.add(LSTM(256,return_sequences=True))
+    model.add(Flatten())
+    model.add(Dense(nb_classes, activation='softmax'))
+elif (IA_NUMBER == 2):
+    ### LTSM
+    model = Sequential()
+    model.add(LSTM(512,return_sequences=True))
+    model.add(Flatten())
+    model.add(Dense(nb_classes, activation='softmax'))
+elif (IA_NUMBER == 3):
+    ### LTSM
+    model = Sequential()
+    model.add(LSTM(1024,return_sequences=True))
+    model.add(Flatten())
+    model.add(Dense(nb_classes, activation='softmax'))
+else:
+    print("There are no IA number:",IA_NUMBER," implemented yet, see the files train_moddel.py")
+    exit(0)
 
-### Dense model
-# model = Sequential()
-# model.add(Flatten())
-# model.add(Dense(100, activation='relu', input_shape=(nb_features, 80)))
-# model.add(Dense(100, activation='relu', input_shape=(nb_features, 80)))
-# model.add(Dense(100, activation='relu', input_shape=(nb_features, 80)))
-# model.add(Dense(nb_classes, activation='softmax'))
 
-### LTSM
-model = Sequential()
-model.add(LSTM(LSTM_SIZE,return_sequences=True))
-model.add(Flatten())
-model.add(Dense(nb_classes, activation='softmax'))
 
 model.compile(loss='categorical_crossentropy',
               optimizer='adam',
@@ -114,17 +155,6 @@ history = model.fit(
 
 
 # ---------------------------------------------------------------------------------------------------------------------------
-### Put the model summary in a txt file
-stdout = sys.stdout
-sys.stdout = open(output_path+'summary.txt', 'w')
-model.summary()
-sys.stdout = stdout
-# print in terminal as well
-model.summary()
-
-
-
-# ---------------------------------------------------------------------------------------------------------------------------
 ### Ploting the acc and loss
 fig, (ax1,ax2) = plt.subplots(1, 2)
 
@@ -153,18 +183,40 @@ predicted = model.predict_classes(X_val)
 target = np.argmax(y_val, axis=1)
 
 fail = [x!=y for x,y in zip(predicted,target)]
-print("False predictions: %d/%d" % (np.sum(fail), len(y_val)))
-print("Pred:", predicted[fail])
-print("Real:", target[fail])
-
 cm = confusion_matrix(target,predicted)
-
 df_cm = pd.DataFrame(cm, index = np.array(list(classes)),
                      columns = np.array(list(classes)))
 sn.heatmap(df_cm, annot=True)
 plt.savefig(output_path+'heatmap.png')
-# plt.show()
 
-# Save the history as .csv
-# NOTE : note really working
-# pd.DataFrame.from_dict(model.history.history).to_csv('history.csv',index=False)
+# ---------------------------------------------------------------------------------------------------------------------------
+### Put the model overall summary in a txt file
+stdout = sys.stdout # get stdout
+
+sys.stdout = open(output_path+'summary.txt', 'w') # Changing stdout to the file.txt
+print("========================================")
+print("      OVERALL RECAP OF THE MODEL        ")
+print("========================================")
+print()
+print("---------------------------------------------")
+print(">>     Parameters     <<")
+print()
+print("> DATA_PATH:            ", DATA_PATH)
+print("> MODEL_NAME:           ", MODEL_NAME)
+print("> BOOL_COLLISION_ONLY:  ", BOOL_COLLISION_ONLY)
+print("> TIME_WINDOW_SIZE:     ", TIME_WINDOW_SIZE)
+print("> OVERLAP_RATIO:        ", OVERLAP_RATIO)
+print("> BATCH_SIZE:           ", BATCH_SIZE)
+print("> EPOCHS:               ", EPOCHS)
+print("> TEST_SIZE:            ", TEST_SIZE)
+print("> IA_NUMBER:            ", IA_NUMBER)
+print("---------------------------------------------")
+print()
+model.summary()
+print()
+print("False predictions: %d/%d" % (np.sum(fail), len(y_val)))
+print("Pred:", predicted[fail])
+print("Real:", target[fail])
+
+sys.stdout = stdout # Reset stdout
+model.summary() # print thee summary in the terminal as well
