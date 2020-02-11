@@ -44,9 +44,11 @@ arm_2_y2 = 13
 arm_2_x3 = 14
 arm_2_y3 = 15
 
-if len(sys.argv) != 3 :
+if len(sys.argv) != 4 :
     print("Usage: %s <csv_file> <model.h5> <TIME_WINDOW_SIZE>" % sys.argv[0])
     exit()
+
+time_window_size = int(sys.argv[3])
 
 
 x, y= [], []
@@ -82,16 +84,16 @@ model = tf.keras.models.load_model(sys.argv[2])
 ### ===============================================================
 ###                  LOADING THE SCENARIO
 ### ===============================================================
-Xs, ys, classes = load_data(path=sys.argv[1], shuffle=False, full_path=True)
+Xs, ys, classes = load_data(path=sys.argv[1], shuffle=False, TIME_WINDOW_SIZE=time_window_size, full_path=True)
 classification=['0','1','2','3']
 scores = []
 
-for i in range(TIME_WINDOW_SIZE):
+for i in range(time_window_size):
     scores.append([0.,0.,0.,0.])
 
-for i in range(TIME_WINDOW_SIZE, len(Xs)-1):
+for i in range(time_window_size, len(Xs)-1):
     pred = model.predict(np.array([Xs[i]])).tolist()
-    for j in range(i,i+TIME_WINDOW_SIZE):
+    for j in range(i,i+time_window_size):
         scores.append(pred[0])
     
 print("SCORE SIZE ", len(scores))
