@@ -61,7 +61,6 @@ while (os.path.exists(output_path)):
     output_path=output_path_memo+'('+str(i)+')'
     i=i+1
 os.makedirs(output_path)
-output_path=output_path+'/'
 
 
 
@@ -82,14 +81,51 @@ ys = np.array(ys)
 classes = set(ys)
 ys = to_categorical(ys, nb_classes)
 
-X_train, X_val, y_train, y_val = train_test_split(Xs, ys, 
-                                                  stratify=ys, 
-                                                  test_size=TEST_SIZE, 
-                                                  random_state=12345, 
+X_train, X_val, y_train, y_val = train_test_split(Xs, ys,
+                                                  stratify=ys,
+                                                  test_size=TEST_SIZE,
+                                                  random_state=12345,
                                                   shuffle=True )
 
 
 # ---------------------------------------------------------------------------------------------------------------------------
+# ### IA models
+# if (IA_NUMBER == 0):
+#     ### Dense model
+#     model = Sequential()
+#
+#     # Input layer, necessary
+#     model.add(Flatten())
+#
+#     # Hidden layers
+#     model.add(Dense(100, activation='relu'))
+#     model.add(Dense(100, activation='relu'))
+#     model.add(Dense(100, activation='relu'))
+#
+#     # Output layer, necessary
+#     model.add(Dense(nb_classes, activation='softmax'))
+# elif (IA_NUMBER == 1):
+#     ### LTSM
+#     model = Sequential()
+#     model.add(LSTM(256,return_sequences=True))
+#     model.add(Flatten())
+#     model.add(Dense(nb_classes, activation='softmax'))
+# elif (IA_NUMBER == 2):
+#     ### LTSM
+#     model = Sequential()
+#     model.add(LSTM(512,return_sequences=True))
+#     model.add(Flatten())
+#     model.add(Dense(nb_classes, activation='softmax'))
+# elif (IA_NUMBER == 3):
+#     ### LTSM
+#     model = Sequential()
+#     model.add(LSTM(1024,return_sequences=True))
+#     model.add(Flatten())
+#     model.add(Dense(nb_classes, activation='softmax'))
+# else:
+#     print("There are no IA number:",IA_NUMBER," implemented yet, see the files train_moddel.py")
+#     exit(0)
+
 ### IA models
 if (IA_NUMBER == 0):
     ### Dense model
@@ -99,262 +135,177 @@ if (IA_NUMBER == 0):
     model.add(Flatten())
 
     # Hidden layers
-    model.add(Dense(100, activation='relu'))
+    model.add(Dense(300, activation='relu'))
 
     # Output layer, necessary
     model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 1):
-    ### Dense model
-    model = Sequential()
+        ### Dense model
+        model = Sequential()
 
-    # Input layer, necessary
-    model.add(Flatten())
+        # Input layer, necessary
+        model.add(Flatten())
 
-    # Hidden layers
-    model.add(Dense(500, activation='relu'))
+        # Hidden layers
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
 
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 2):
-    ### Dense model
-    model = Sequential()
+        ### Dense model
+        model = Sequential()
 
-    # Input layer, necessary
-    model.add(Flatten())
+        # Input layer, necessary
+        model.add(Flatten())
 
-    # Hidden layers
-    model.add(Dense(300, activation='relu'))
-    model.add(Dense(300, activation='relu'))
+        # Hidden layers
+        model.add(Dense(500, activation='relu'))
+        model.add(Dense(500, activation='relu'))
 
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 3):
-    ### Dense model
-    model = Sequential()
+        ### Dense model
+        model = Sequential()
 
-    # Input layer, necessary
-    model.add(Flatten())
+        # Input layer, necessary
+        model.add(Flatten())
 
-    # Hidden layers
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(300, activation='relu'))
-    model.add(Dense(200, activation='relu'))
+        # Hidden layers
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
 
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 4):
-    ### Dense model
-    model = Sequential()
+        ### Dense model
+        model = Sequential()
 
-    # Input layer, necessary
-    model.add(Flatten())
+        # Input layer, necessary
+        model.add(Flatten())
 
-    # Hidden layers
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(200, activation='relu'))
+        # Hidden layers
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(300, activation='relu'))
+        model.add(Dense(100, activation='relu'))
 
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 5):
-    ### LTSM
-    model = Sequential()
-    model.add(LSTM(256,return_sequences=True))
-    model.add(Flatten())
-    model.add(Dense(nb_classes, activation='softmax'))
+        ### Dense model
+        model = Sequential()
+
+        # Input layer, necessary
+        model.add(Flatten())
+
+        # Hidden layers
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 6):
-    ### LTSM
-    model = Sequential()
-    model.add(LSTM(1024,return_sequences=True))
-    model.add(Flatten())
-    model.add(Dense(nb_classes, activation='softmax'))
+        ### LTSM
+        model = Sequential()
+        model.add(LSTM(512,return_sequences=True))
+        model.add(Flatten())
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 7):
-    ### LTSM
-    model = Sequential()
-    model.add(LSTM(4096,return_sequences=True))
-    model.add(Flatten())
-    model.add(Dense(nb_classes, activation='softmax'))
+        ### LTSM
+        model = Sequential()
+        model.add(LSTM(2048,return_sequences=True))
+        model.add(Flatten())
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 8):
-    ### Dense model
-    model = Sequential()
+        ### Dense model
+        model = Sequential()
 
-    # Input layer, necessary
-    model.add(Flatten())
+        # Input layer, necessary
+        model.add(Flatten())
 
-    # Hidden layers
-    model.add(Dense(300, activation='relu'))
+        # Hidden layers
+        model.add(Dense(100, activation='relu'))
 
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 9):
-    ### Dense model
-    model = Sequential()
+        ### Dense model
+        model = Sequential()
 
-    # Input layer, necessary
-    model.add(Flatten())
+        # Input layer, necessary
+        model.add(Flatten())
 
-    # Hidden layers
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(100, activation='relu'))
+        # Hidden layers
+        model.add(Dense(500, activation='relu'))
 
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 10):
-    ### Dense model
-    model = Sequential()
+        ### Dense model
+        model = Sequential()
 
-    # Input layer, necessary
-    model.add(Flatten())
+        # Input layer, necessary
+        model.add(Flatten())
 
-    # Hidden layers
-    model.add(Dense(500, activation='relu'))
-    model.add(Dense(500, activation='relu'))
+        # Hidden layers
+        model.add(Dense(300, activation='relu'))
+        model.add(Dense(300, activation='relu'))
 
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 11):
-    ### Dense model
-    model = Sequential()
+        ### Dense model
+        model = Sequential()
 
-    # Input layer, necessary
-    model.add(Flatten())
+        # Input layer, necessary
+        model.add(Flatten())
 
-    # Hidden layers
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(100, activation='relu'))
+        # Hidden layers
+        model.add(Dense(200, activation='relu'))
+        model.add(Dense(300, activation='relu'))
+        model.add(Dense(200, activation='relu'))
 
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 12):
-    ### Dense model
-    model = Sequential()
+        ### Dense model
+        model = Sequential()
 
-    # Input layer, necessary
-    model.add(Flatten())
+        # Input layer, necessary
+        model.add(Flatten())
 
-    # Hidden layers
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(300, activation='relu'))
-    model.add(Dense(100, activation='relu'))
+        # Hidden layers
+        model.add(Dense(200, activation='relu'))
+        model.add(Dense(200, activation='relu'))
+        model.add(Dense(200, activation='relu'))
+        model.add(Dense(200, activation='relu'))
+        model.add(Dense(200, activation='relu'))
 
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        # Output layer, necessary
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 13):
-    ### Dense model
-    model = Sequential()
-
-    # Input layer, necessary
-    model.add(Flatten())
-
-    # Hidden layers
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(100, activation='relu'))
-
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
+        ### LTSM
+        model = Sequential()
+        model.add(LSTM(256,return_sequences=True))
+        model.add(Flatten())
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 14):
-    ### LTSM
-    model = Sequential()
-    model.add(LSTM(512,return_sequences=True))
-    model.add(Flatten())
-    model.add(Dense(nb_classes, activation='softmax'))
+        ### LTSM
+        model = Sequential()
+        model.add(LSTM(1024,return_sequences=True))
+        model.add(Flatten())
+        model.add(Dense(nb_classes, activation='softmax'))
 elif (IA_NUMBER == 15):
-    ### LTSM
-    model = Sequential()
-    model.add(LSTM(2048,return_sequences=True))
-    model.add(Flatten())
-    model.add(Dense(nb_classes, activation='softmax'))
-elif (IA_NUMBER == 16):
-    ### Dense model
-    model = Sequential()
-
-    # Input layer, necessary
-    model.add(Flatten())
-
-    # Hidden layers
-    model.add(Dense(100, activation='relu'))
-
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
-elif (IA_NUMBER == 17):
-    ### Dense model
-    model = Sequential()
-
-    # Input layer, necessary
-    model.add(Flatten())
-
-    # Hidden layers
-    model.add(Dense(500, activation='relu'))
-
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
-elif (IA_NUMBER == 18):
-    ### Dense model
-    model = Sequential()
-
-    # Input layer, necessary
-    model.add(Flatten())
-
-    # Hidden layers
-    model.add(Dense(300, activation='relu'))
-    model.add(Dense(300, activation='relu'))
-
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
-elif (IA_NUMBER == 19):
-    ### Dense model
-    model = Sequential()
-
-    # Input layer, necessary
-    model.add(Flatten())
-
-    # Hidden layers
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(300, activation='relu'))
-    model.add(Dense(200, activation='relu'))
-
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
-elif (IA_NUMBER == 20):
-    ### Dense model
-    model = Sequential()
-
-    # Input layer, necessary
-    model.add(Flatten())
-
-    # Hidden layers
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(200, activation='relu'))
-    model.add(Dense(200, activation='relu'))
-
-    # Output layer, necessary
-    model.add(Dense(nb_classes, activation='softmax'))
-elif (IA_NUMBER == 21):
-    ### LTSM
-    model = Sequential()
-    model.add(LSTM(256,return_sequences=True))
-    model.add(Flatten())
-    model.add(Dense(nb_classes, activation='softmax'))
-elif (IA_NUMBER == 22):
-    ### LTSM
-    model = Sequential()
-    model.add(LSTM(1024,return_sequences=True))
-    model.add(Flatten())
-    model.add(Dense(nb_classes, activation='softmax'))
-elif (IA_NUMBER == 23):
-    ### LTSM
-    model = Sequential()
-    model.add(LSTM(4096,return_sequences=True))
-    model.add(Flatten())
-    model.add(Dense(nb_classes, activation='softmax'))
+        ### LTSM
+        model = Sequential()
+        model.add(LSTM(4096,return_sequences=True))
+        model.add(Flatten())
+        model.add(Dense(nb_classes, activation='softmax'))
 else:
     print("There are no IA number:",IA_NUMBER," implemented yet, see the files train_moddel.py")
     exit(0)
