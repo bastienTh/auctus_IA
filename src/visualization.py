@@ -44,12 +44,13 @@ arm_2_y2 = 13
 arm_2_x3 = 14
 arm_2_y3 = 15
 
-if len(sys.argv) != 4 :
-    print("Usage: %s <csv_file> <model.h5> <TIME_WINDOW_SIZE>" % sys.argv[0])
+if len(sys.argv) != 5 :
+    print("Usage: %s <csv_file> <model.h5> <TIME_WINDOW_SIZE> <OVERLAP_RATIO>" % sys.argv[0])
     exit()
 
-time_window_size = int(sys.argv[3])
-
+TIME_WINDOW_SIZE = int(sys.argv[3])
+OVERLAP_RATIO = float(sys.argv[4])
+STEP=int(TIME_WINDOW_SIZE*OVERLAP_RATIO)
 
 x, y= [], []
 x_min, x_max, y_min, y_max = 0,0,0,0
@@ -79,31 +80,28 @@ t = np.arange(0.0, dt*len(x), dt)
 ### ===============================================================
 ###                  LOADING THE TRAINED IA
 ### ===============================================================
-model = tf.keras.models.load_model(sys.argv[2])
+model_memo = tf.keras.models.load_model(sys.argv[2])
 
 ### ===============================================================
 ###                  LOADING THE SCENARIO
 ### ===============================================================
-Xs, ys, classes = load_data(path=sys.argv[1], shuffle=False, TIME_WINDOW_SIZE=time_window_size, full_path=True)
+Xs, ys, classes = load_data(path=sys.argv[1], shuffle=False, TIME_WINDOW_SIZE=TIME_WINDOW_SIZE, STEP=STEP, full_path=True)
 classification=['0','1','2','3']
 scores = []
 
-for i in range(time_window_size):
-    scores.append([0.,0.,0.,0.])
-
-for i in range(time_window_size, len(Xs)-1):
+# Before this condition, no prediction can be done
+for i in range(len(x)%STEP):
+    scores.append([0., 0., 0., 0.])
+for i in range(len(Xs)):
+    model = model_memo
     pred = model.predict(np.array([Xs[i]])).tolist()
-    for j in range(i,i+time_window_size):
+    for j in range(STEP):
         scores.append(pred[0])
+        print(pred[0])
     
+print("STEP ", STEP)
 print("SCORE SIZE ", len(scores))
 print("x SIZE ", len(x))
-
-# for i in range(TIME_WINDOW_SIZE,len(Xs)):
-#     for j in range(i,i+TIME_WINDOW_SIZE):
-#         scores.append([rn.uniform(0,1),rn.uniform(0,1),rn.uniform(0,1),rn.uniform(0,1)])
-
-# print(scores)
 
 def plot_student_results(classification, scores):
     #  create the figure
@@ -178,7 +176,7 @@ def plot_student_results(classification, scores):
         return [time_text] + lines + rects.patches
 
     ani_robot = animation.FuncAnimation(fig, animate_robot, np.arange(1, len(x)),
-                                interval=5000*dt, blit=True, init_func=init_robot, repeat=False)
+                                interval=5000*dt, blit=True, init_func=init_robot, repeat=True)
 
     return {'fig': fig,
             'ax_robot': ax_robot,
